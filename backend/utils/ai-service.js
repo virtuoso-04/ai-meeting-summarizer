@@ -191,68 +191,106 @@ class AIService {
    * @private
    */
   _constructSummaryPrompt(transcript, customPrompt) {
-    // Create a well-structured prompt optimized for markdown output
+    // Create a well-structured prompt optimized for markdown output and Groq model
     const basePrompt = `
 # Meeting Transcript Summary Task
 
 ## Context
-You are a professional meeting summarizer who converts transcripts into clear, structured summaries formatted in Markdown. Your summaries are valued for their clarity, organization, and visual structure.
+You are an expert meeting summarizer who transforms transcripts into highly structured, professional summaries using Markdown. Your summaries are valued for their clarity, precise organization, and actionable insights. You're using the llama3-70b-8192 model from Groq, which excels at structured content generation.
 
 ## Transcript to Summarize
 ${transcript}
 
 ## Instructions
 ${customPrompt ? `Custom Instructions: ${customPrompt}` : `
-- Extract the key points, decisions, and action items
-- Organize by topic in a logical structure 
-- Use markdown formatting to enhance readability
-- Highlight important decisions and assignments
+- Extract all key points, decisions, and action items
+- Organize content by topic in a logical structure 
+- Use comprehensive markdown formatting to enhance readability
+- Clearly highlight important decisions and assignments in bold
+- Ensure all action items are captured with owners and deadlines
 - Keep the summary concise yet comprehensive`}
 
-## Output Format
-Please provide a well-organized meeting summary using proper Markdown formatting with:
+## Required Output Structure
+Your summary MUST follow this exact structure:
 
-1. # H1 heading for the meeting title
-2. ## H2 headings for main sections
-3. ### H3 headings for subsections
-4. Bullet points (- ) for lists of key points
-5. **Bold text** for important decisions
-6. Use \`code blocks\` for technical terms or code mentioned
-7. > Blockquotes for important quotes from participants
-8. Create a table for action items with columns for Task, Owner, and Deadline
-9. Use horizontal rules (---) to separate major sections
+1. **Meeting Title (H1 heading)** - Create a descriptive title for the meeting
+2. **Meeting Overview (H2 heading)** - Brief 2-3 sentence overview of the meeting purpose and outcome
+3. **Participants (H2 heading)** - List of participants identified from the transcript
+4. **Key Discussion Points (H2 heading)** - Organize by topics as H3 headings
+   - Include bullet points for specific details
+   - Use sub-bullets for supporting information
+   - Use **bold text** to highlight important decisions
+5. **Action Items (H2 heading)** - Create a table with these exact columns:
+   | Task | Owner | Deadline | Priority |
+   |------|-------|----------|----------|
+6. **Next Steps (H2 heading)** - List upcoming actions and follow-ups
+7. **Conclusion (H2 heading)** - Brief summary of meeting outcome
 
-Example structure:
+## Markdown Formatting Requirements
+- Use # for main heading (title)
+- Use ## for section headings
+- Use ### for topic subheadings
+- Use - for bullet points and nested bullets
+- Use **bold** for emphasis and important decisions
+- Use \`code\` for technical terms or specific references
+- Use > for important quotes from participants
+- Use --- for section separators where appropriate
+- Use properly formatted tables with aligned columns for action items
+
+Example structure to follow precisely:
 \`\`\`markdown
-# Meeting Summary: [Project/Topic]
+# Q3 Product Roadmap Meeting
+
+## Meeting Overview
+This meeting focused on finalizing the Q3 product roadmap. The team reviewed current progress, prioritized features, and assigned responsibilities for upcoming deliverables.
 
 ## Participants
-- Person 1
-- Person 2
+- Jane Smith (Product Manager)
+- Michael Chen (Engineering Lead)
+- Priya Patel (UX Designer)
+- Robert Johnson (QA Manager)
+- Sarah Williams (Marketing Director)
 
 ## Key Discussion Points
-### Topic 1
-- Key point 1
-- Key point 2
-  - Sub-point A
-  - Sub-point B
+### Current Sprint Status
+- Sprint 27 is currently at 85% completion
+  - 7 user stories completed
+  - 2 stories at risk due to API integration issues
+- **Decision made**: Team will extend current sprint by 2 days to complete all stories
+- QA team reported 20% reduction in regression bugs after implementing new test framework
 
-### Topic 2
-- Discussion about X
-- **Decision made**: We will proceed with option Y
+### Q3 Feature Prioritization
+- Customer feedback analysis shows high demand for mobile payment integration
+- **Decision made**: Mobile payments will be the top priority feature for Q3
+- Security team requirements must be addressed before development starts
+- > "We should involve the security team from day one" - Michael Chen
+
+### Resource Allocation
+- Backend team needs an additional developer for API work
+- UX team will complete designs by June 15th
+- **Decision made**: Marketing launch will be scheduled for August 30th
+
+---
 
 ## Action Items
-| Task | Owner | Deadline |
-|------|-------|----------|
-| Complete feature X | Alice | 2023-09-15 |
-| Review proposal | Bob | 2023-09-10 |
+| Task | Owner | Deadline | Priority |
+|------|-------|----------|----------|
+| Create mobile payment security spec | Michael | 2025-06-10 | High |
+| Complete API documentation | Robert | 2025-06-15 | Medium |
+| Finalize UX designs | Priya | 2025-06-15 | High |
+| Schedule user testing sessions | Sarah | 2025-07-05 | Medium |
+| Update project timeline | Jane | 2025-06-05 | High |
 
 ## Next Steps
-- Schedule follow-up meeting
-- Share documentation with the team
+- Schedule follow-up meeting for June 20th
+- Distribute updated roadmap to all stakeholders
+- Begin security planning sessions with external consultant
+
+## Conclusion
+The Q3 roadmap was successfully finalized with clear priorities and ownership. Mobile payments will be the flagship feature, with a target launch date of August 30th. All team members are aligned on priorities and deadlines.
 \`\`\`
 
-Make sure your summary is structured, visually organized, and captures the essence of the meeting.
+Make sure your summary is highly structured, visually organized, and captures all important aspects of the meeting. The Groq model excels at this type of structured output.
 `.trim();
 
     return basePrompt;
