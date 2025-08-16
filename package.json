@@ -1,0 +1,28 @@
+{
+  "name": "ai-meeting-summarizer",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "predev": "node scripts/check-setup.js",
+    "prestart": "node scripts/check-setup.js",
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "start:backend": "cd backend && npm start",
+    "start:frontend": "cd frontend && npm run preview",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "setup-check": "node scripts/check-setup.js",
+    "fix-permissions": "chmod +x scripts/check-setup.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "AI-powered meeting notes summarizer and sharer",
+  "devDependencies": {
+    "chalk": "^4.1.2",
+    "concurrently": "^9.2.0"
+  }
+}
