@@ -1,4 +1,8 @@
 import { useState } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import './App.css'
 
 function App() {
@@ -6,6 +10,7 @@ function App() {
   const [customPrompt, setCustomPrompt] = useState('')
   const [summary, setSummary] = useState('')
   const [editableSummary, setEditableSummary] = useState('')
+  const [isMarkdownPreview, setIsMarkdownPreview] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
   const [emailRecipients, setEmailRecipients] = useState('')
@@ -14,6 +19,7 @@ function App() {
   const [emailSent, setEmailSent] = useState(false)
   const [emailError, setEmailError] = useState(null)
   const [showEmailForm, setShowEmailForm] = useState(false)
+  const [uploadedFileName, setUploadedFileName] = useState('')
 
   const generateSummary = async () => {
     // Validate transcript
@@ -193,6 +199,19 @@ function App() {
         // Show success message with recipient count
         setEmailSent(true);
         console.log(`Email sent successfully to ${recipients.length} recipient(s)`);
+        
+        // Reset email form after successful send
+        setTimeout(() => {
+          setEmailRecipients('');
+          setEmailSubject('Meeting Summary');
+          setEmailError(null);
+          setShowEmailForm(false);
+          
+          // After 3 seconds, clear the success message
+          setTimeout(() => {
+            setEmailSent(false);
+          }, 3000);
+        }, 2000);
       } catch (fetchError) {
         if (fetchError.name === 'AbortError') {
           throw new Error('Email sending timed out. Please try again later.');
@@ -208,52 +227,89 @@ function App() {
     }
   };
 
-  const handleFileUpload = (e) => {
+  const handleFileUpload = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file) {
+      // User cancelled the file selection
+      setUploadedFileName('');
+      return;
+    }
     
     // Check file size (limit to 10MB)
     const maxSizeInBytes = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSizeInBytes) {
       setError(`File size exceeds the 10MB limit. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB.`);
+      setUploadedFileName('');
+      e.target.value = null; // Reset the file input
       return;
     }
     
     // Check file type
-    const allowedTypes = ['.txt', '.md', '.doc', '.docx', '.pdf'];
+    const allowedTypes = ['.txt', '.md', '.json', '.csv', '.html'];
     const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
     
     if (!allowedTypes.includes(fileExtension)) {
       setError(`File type "${fileExtension}" is not supported. Please use: ${allowedTypes.join(', ')}`);
+      setUploadedFileName('');
+      e.target.value = null; // Reset the file input
       return;
     }
     
-    setError(null); // Clear any previous errors
-    
-    const reader = new FileReader();
-    
-    reader.onload = (e) => {
-      try {
-        // For text files, we can directly use the result
-        const content = e.target.result;
-        
-        // If the file is too large (over 100k chars), truncate it
-        if (content.length > 100000) {
-          setTranscript(content.substring(0, 100000));
-          setError('File content was too large and has been truncated to 100,000 characters');
-        } else {
-          setTranscript(content);
-        }
-      } catch (error) {
-        setError(`Failed to read file: ${error.message}`);
+    try {
+      setError(null); // Clear any previous errors
+      setUploadedFileName(file.name); // Store the filename for display
+      setIsLoading(true);
+      
+      // Create form data for file upload
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      // Upload file to the server
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/upload-transcript`, {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || `Server responded with status: ${response.status}`);
       }
-    };
+      
+      const data = await response.json();
+      
+      // Update transcript with the extracted text
+      if (data.text) {
+        setTranscript(data.text);
+        
+        if (data.charCount > 90000) {
+          setError(`Note: This is a large transcript (${data.charCount.toLocaleString()} characters). AI processing may take longer.`);
+        }
+      } else {
+        throw new Error('No text content extracted from file');
+      }
+    } catch (error) {
+      setError(`Failed to process file: ${error.message}`);
+      setUploadedFileName('');
+      e.target.value = null; // Reset the file input
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const resetForm = () => {
+    // Reset all form fields
+    setTranscript('');
+    setCustomPrompt('');
+    setSummary('');
+    setEditableSummary('');
+    setError(null);
+    setUploadedFileName('');
     
-    reader.onerror = () => {
-      setError('Failed to read the file. Please try again with a different file.');
-    };
-    
-    reader.readAsText(file);
+    // Reset file input if exists
+    const fileInput = document.getElementById('file-upload');
+    if (fileInput) {
+      fileInput.value = null;
+    }
   };
 
   return (
@@ -282,12 +338,29 @@ function App() {
                 <input
                   type="file"
                   id="file-upload"
-                  accept=".txt,.md,.doc,.docx,.pdf"
+                  accept=".txt,.md,.json,.csv,.html"
                   onChange={handleFileUpload}
+                  aria-label="Upload transcript file"
                 />
-                <span className="file-format-note">
-                  Supported formats: .txt, .md, .doc, .docx, .pdf
-                </span>
+                {uploadedFileName ? (
+                  <div className="file-info">
+                    <span className="file-name">File: {uploadedFileName}</span>
+                    <button 
+                      className="file-clear-btn"
+                      onClick={() => {
+                        setUploadedFileName('');
+                        document.getElementById('file-upload').value = null;
+                      }}
+                      aria-label="Clear selected file"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <span className="file-format-note">
+                    Supported formats: .txt, .md, .json, .csv, .html
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -303,13 +376,25 @@ function App() {
             />
           </div>
 
-          <button 
-            className="generate-btn"
-            onClick={generateSummary}
-            disabled={isLoading || !transcript.trim()}
-          >
-            {isLoading ? 'Generating... This may take a moment' : 'Generate Summary'}
-          </button>
+          <div className="button-group">
+            <button 
+              className="generate-btn"
+              onClick={generateSummary}
+              disabled={isLoading || !transcript.trim()}
+              aria-label="Generate summary from transcript"
+            >
+              {isLoading ? 'Generating... This may take a moment' : 'Generate Summary'}
+            </button>
+            
+            <button 
+              className="reset-btn"
+              onClick={resetForm}
+              disabled={isLoading || (!transcript.trim() && !customPrompt.trim())}
+              aria-label="Reset all form fields"
+            >
+              Reset Form
+            </button>
+          </div>
 
           {error && <div className="error-message">
             <strong>Error:</strong> {error}
@@ -328,13 +413,66 @@ function App() {
           <section className="output-section">
             <h2>Generated Summary</h2>
             
-            <div className="summary-editor">
-              <textarea
-                value={editableSummary}
-                onChange={(e) => setEditableSummary(e.target.value)}
-                rows={12}
-              />
+            <div className="view-toggle">
+              <button 
+                className={`toggle-btn ${!isMarkdownPreview ? 'active' : ''}`}
+                onClick={() => setIsMarkdownPreview(false)}
+              >
+                Edit
+              </button>
+              <button 
+                className={`toggle-btn ${isMarkdownPreview ? 'active' : ''}`}
+                onClick={() => setIsMarkdownPreview(true)}
+              >
+                Preview
+              </button>
             </div>
+            
+            {isMarkdownPreview ? (
+              <div className="markdown-preview">
+                <ReactMarkdown 
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    code({node, inline, className, children, ...props}) {
+                      const match = /language-(\w+)/.exec(className || '')
+                      return !inline && match ? (
+                        <SyntaxHighlighter
+                          style={tomorrow}
+                          language={match[1]}
+                          PreTag="div"
+                          {...props}
+                        >
+                          {String(children).replace(/\n$/, '')}
+                        </SyntaxHighlighter>
+                      ) : (
+                        <code className={className} {...props}>
+                          {children}
+                        </code>
+                      )
+                    },
+                    table({node, className, children, ...props}) {
+                      return (
+                        <div className="table-container">
+                          <table className={className} {...props}>
+                            {children}
+                          </table>
+                        </div>
+                      )
+                    }
+                  }}
+                >
+                  {editableSummary}
+                </ReactMarkdown>
+              </div>
+            ) : (
+              <div className="summary-editor">
+                <textarea
+                  value={editableSummary}
+                  onChange={(e) => setEditableSummary(e.target.value)}
+                  rows={12}
+                />
+              </div>
+            )}
 
             <div className="action-buttons">
               <button 
@@ -342,6 +480,22 @@ function App() {
                 onClick={() => setShowEmailForm(!showEmailForm)}
               >
                 Share via Email
+              </button>
+              <button 
+                className="download-btn"
+                onClick={() => {
+                  const blob = new Blob([editableSummary], { type: 'text/markdown' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `meeting-summary-${new Date().toISOString().split('T')[0]}.md`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                }}
+              >
+                Download as Markdown
               </button>
             </div>
 

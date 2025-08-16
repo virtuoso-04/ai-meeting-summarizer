@@ -1,8 +1,4 @@
-/**
- * Utility functions for validation and data handling
- */
 
-// Email validation regex
 export const isValidEmail = (email) => {
   const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return regex.test(email);

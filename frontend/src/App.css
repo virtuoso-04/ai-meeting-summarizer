@@ -116,7 +116,48 @@ textarea:focus, input[type="text"]:focus {
   color: var(--dark-gray);
 }
 
-.generate-btn, .share-btn, .send-email-btn {
+.file-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background-color: var(--light-gray);
+  border-radius: var(--border-radius);
+  margin-top: 0.5rem;
+}
+
+.file-name {
+  font-size: 0.9rem;
+  color: var(--dark-gray);
+  font-weight: 500;
+  word-break: break-all;
+}
+
+.file-clear-btn {
+  background: none;
+  border: none;
+  color: var(--dark-gray);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.5rem;
+}
+
+.file-clear-btn:hover {
+  background-color: var(--mid-gray);
+}
+
+.button-group {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.generate-btn, .share-btn, .send-email-btn, .reset-btn {
   padding: 1rem 2rem;
   font-size: 1.1rem;
   font-weight: 600;
@@ -129,6 +170,7 @@ textarea:focus, input[type="text"]:focus {
 .generate-btn {
   background-color: var(--primary-color);
   color: white;
+  flex: 2;
 }
 
 .generate-btn:hover {
@@ -137,6 +179,22 @@ textarea:focus, input[type="text"]:focus {
 
 .generate-btn:disabled {
   background-color: var(--mid-gray);
+  cursor: not-allowed;
+}
+
+.reset-btn {
+  background-color: var(--light-gray);
+  color: var(--dark-gray);
+  border: 1px solid var(--mid-gray);
+  flex: 1;
+}
+
+.reset-btn:hover {
+  background-color: var(--mid-gray);
+}
+
+.reset-btn:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
@@ -225,19 +283,172 @@ button:focus, textarea:focus, input:focus {
   color: var(--text-color);
 }
 
+/* Toggle view buttons */
+.view-toggle {
+  display: flex;
+  gap: 0;
+  margin-bottom: 1rem;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.toggle-btn {
+  flex: 1;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--light-gray);
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toggle-btn.active {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.toggle-btn:hover:not(.active) {
+  background-color: var(--mid-gray);
+}
+
 .summary-editor {
   margin-bottom: 1.5rem;
 }
 
 .summary-editor textarea {
-  min-height: 250px;
+  min-height: 350px;
   font-size: 1.1rem;
+  line-height: 1.5;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace;
+}
+
+/* Markdown Preview Styling */
+.markdown-preview {
+  background: white;
+  border: 1px solid var(--mid-gray);
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+  min-height: 350px;
+  max-height: 600px;
+  overflow-y: auto;
+  line-height: 1.6;
+}
+
+/* Markdown elements styling */
+.markdown-preview h1 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: var(--primary-color);
+  font-size: 2rem;
+  border-bottom: 2px solid var(--light-gray);
+  padding-bottom: 0.5rem;
+}
+
+.markdown-preview h2 {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  color: var(--secondary-color);
+}
+
+.markdown-preview h3 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 1.25rem;
+}
+
+.markdown-preview ul, 
+.markdown-preview ol {
+  padding-left: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.markdown-preview li {
+  margin-bottom: 0.5rem;
+}
+
+.markdown-preview blockquote {
+  border-left: 4px solid var(--primary-color);
+  padding-left: 1rem;
+  color: #555;
+  font-style: italic;
+  margin: 1rem 0;
+}
+
+.markdown-preview pre {
+  background-color: #f7f7f7;
+  border-radius: var(--border-radius);
+  overflow-x: auto;
+}
+
+.markdown-preview code {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.9em;
+  padding: 0.2em 0.4em;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+}
+
+.markdown-preview pre > code {
+  background-color: transparent;
+  padding: 0;
+}
+
+.markdown-preview hr {
+  border: none;
+  border-top: 2px solid var(--light-gray);
+  margin: 2rem 0;
+}
+
+.table-container {
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+}
+
+.markdown-preview table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1rem 0;
+}
+
+.markdown-preview th, 
+.markdown-preview td {
+  padding: 0.75rem;
+  border: 1px solid var(--mid-gray);
+  text-align: left;
+}
+
+.markdown-preview th {
+  background-color: var(--light-gray);
+  font-weight: 600;
+}
+
+.markdown-preview tr:nth-child(even) {
+  background-color: #fafafa;
 }
 
 .action-buttons {
   display: flex;
   gap: 1rem;
   margin-bottom: 2rem;
+}
+
+.download-btn {
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all 0.2s;
+  background-color: var(--light-gray);
+  color: var(--text-color);
+  border: 1px solid var(--mid-gray);
+}
+
+.download-btn:hover {
+  background-color: var(--mid-gray);
 }
 
 .email-form {
